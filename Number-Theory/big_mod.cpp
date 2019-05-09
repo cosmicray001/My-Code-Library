@@ -1,13 +1,9 @@
-#define i64 long long
-i64 M;
-i64 F(i64 N,i64 P)
-{
-	if(P==0) return 1 % M;
-	if(P%2==0) 
-	{
-		i64 ret=F(N,P/2);
-		return ((ret%M)*(ret%M))%M;
-	}
-	else return ((N%M)*(F(N,P-1)%M))%M;
-	
+int m;
+int fnc(int a, int b){
+    if(b == 0) return 1 % m;
+    if(b % 2 == 0){
+        int rt = fnc(a, b / 2);
+        return ((rt % m) * (rt % m) % m);
+    }
+    return ((a % m) * fnc(a, b - 1) % m) % m;
 }
