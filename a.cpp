@@ -59,77 +59,71 @@ int main()
 segment_tree
 ------------------------------------------------------------
 #include <bits/stdc++.h>
-#define le 400005
-#define li 100005
-#define ll long long int
+#define le 100005
 using namespace std;
-ll arr[le], n[le];
+int n[le];
+struct eg{
+  int sum, maxx, minn;
+};
+eg arr[4 * le];
+eg com(eg a, eg b){
+  eg temp;
+  temp.sum = a.sum + b.sum;
+  temp.maxx = max(a.maxx, b.maxx);
+  temp.minn = min(a.minn, b.minn);
+  return temp;
+}
 void init(int nd, int b, int e){
   if(b == e){
-    arr[nd] = n[b];
+    arr[nd].sum = n[b];
+    arr[nd].maxx = n[b];
+    arr[nd].minn = n[b];
     return;
   }
   int l = nd << 1, r = l | 1, m = (b + e) >> 1;
   init(l, b, m);
   init(r, m + 1, e);
-  arr[nd] = arr[l] + arr[r];
+  arr[nd] = com(arr[l], arr[r]);
 }
-ll query(int nd, int b, int e, int i, int j){
-  if(b > j || e < i) return 0;
+eg query(int nd, int b, int e, int i, int j){
+  if(b > j || e < i){
+    eg temp;
+    temp.sum = 0;
+    temp.maxx = -INT_MAX;
+    temp.minn = INT_MAX;
+    return temp;
+  }
   if(b >= i && e <= j) return arr[nd];
   int l = nd << 1, r = l | 1, m = (b + e) >> 1;
-  ll v1 = query(l, b, m, i, j);
-  ll v2 = query(r, m + 1, e, i, j);
-  return v1 + v2;
+  return com(query(l, b, m, i, j), query(r, m + 1, e, i, j));
 }
-void update(int nd, int b, int e, int i, ll v){
+void update(int nd, int b, int e, int i, int v){
   if(b > i || e < i) return;
   if(b >= i && e <= i){
-    printf("%lld\n", arr[nd]);
-    arr[nd] = v;
+    arr[nd].sum = v;
+    arr[nd].maxx = v;
+    arr[nd].minn = v;
     return;
   }
   int l = nd << 1, r = l | 1, m = (b + e) >> 1;
   update(l, b, m, i, v);
   update(r, m + 1, e, i, v);
-  arr[nd] = arr[l] + arr[r];
-}
-void up(int nd, int b, int e, int i, ll v){
-  if(b > i || e < i) return;
-  if(b >= i && e <= i){
-    arr[nd] += v;
-    return;
-  }
-  int l = nd << 1, r = l | 1, m = (b + e) >> 1;
-  up(l, b, m, i, v);
-  up(r, m + 1, e, i, v);
-  arr[nd] = arr[l] + arr[r];
+  arr[nd] = com(arr[l], arr[r]);
 }
 int main(){
   //freopen("input.txt", "r", stdin);
-  //freopen("output.txt", "w", stdout);
-  int t, co = 0, len, q, a, b, c;
-  ll d;
-  for(scanf("%d", &t); t--; ){
-    scanf("%d %d", &len, &q);
-    for(int i = 0; i < len; scanf("%lld", &n[i]), i++);
-    init(1, 0, len - 1);
-    printf("Case %d:\n", ++co);
-    while(q--){
-      scanf("%d", &a);
-      if(a == 1){
-        scanf("%d", &b);
-        update(1, 0, len - 1, b, 0);
-      }
-      else if(a == 2){
-        scanf("%d %lld", &b, &d);
-        up(1, 0, len - 1, b, d);
-      }
-      else{
-        scanf("%d %d", &b, &c);
-        printf("%lld\n", query(1, 0, len - 1, b, c));
-      }
+  int len, q, a, b, c;
+  scanf("%d %d", &len, &q);
+  for(int i = 0; i < len; scanf("%d", &n[i]), i++);
+  init(1, 0, len - 1);
+  while(q--){
+    scanf("%d %d %d", &c, &a, &b);
+    if(c == 1){
+      eg temp = query(1, 0, len - 1, a - 1, b - 1);
+      int ve = temp.sum - temp.maxx - temp.minn;
+      printf("%d\n", ve);
     }
+    else update(1, 0, len - 1, a - 1, b);
   }
   return 0;
 }
@@ -863,6 +857,146 @@ int main(){
       }
     }
     printf("Case #%d: %d %.0lf %.0lf\n", ++co, st, floor(bus + 0.5) ,floor(tr + 0.5));
+  }
+  return 0;
+}
+------------------------------------------------------------
+top_sort_dfs
+------------------------------------------------------------
+#include <bits/stdc++.h>
+#define le 11
+using namespace std;
+vector<int> v[le];
+vector<int> ans;
+bool vis[le];
+void dfs(int a){
+    vis[a] = true;
+    for(int i = 0; i < v[a].size(); i++){
+        int e = v[a][i];
+        if(!vis[e]) dfs(e);
+    }
+    ans.push_back(a);
+}
+int main(){
+    freopen("input.txt", "r", stdin);
+    int n, m, a, b;
+    scanf("%d %d", &n, &m);
+    for(int i = 0; i < m; i++){
+        scanf("%d %d", &a, &b);
+        v[a].push_back(b);
+    }
+    for(int i = 1; i < n + 1; i++){
+        if(!vis[i]) dfs(i);
+    }
+    for(int i = ans.size() - 1; i > 0; i--) printf("%d ", ans[i]);
+    printf("%d\n", ans[0]);
+    return 0;
+}
+------------------------------------------------------------
+top_sort_bfs
+------------------------------------------------------------
+#include <bits/stdc++.h>
+#define le 12
+using namespace std;
+int in[le];
+vector<int> v[le];
+vector<int> ans;
+void bfs(int n){
+  priority_queue<int, vector<int>, greater<int> > q;
+  for(int i = 1; i < n + 1; i++) if(in[i] == 0) q.push(i);
+  while(!q.empty()){
+    int p = q.top();
+    q.pop();
+    ans.push_back(p);
+    for(int i = 0; i < v[p].size(); i++){
+      int e = v[p][i];
+      in[e]--;
+      if(in[e] == 0) q.push(e);
+    }
+  }
+}
+int main(){
+  //freopen("input.txt", "r", stdin);
+  int n, m, a, b;
+  scanf("%d %d", &n, &m);
+  for(int i = 0; i < m; i++){
+    scanf("%d %d", &a, &b);
+    in[b]++;
+    v[a].push_back(b);
+  }
+  bfs(n);
+  for(int i = 0; i < ans.size() - 1; i++) printf("%d ", ans[i]);
+  printf("%d\n", ans[ans.size() - 1]);
+  return 0;
+}
+------------------------------------------------------------ recursionallPossibleSubSet
+------------------------------------------------------------
+#include <bits/stdc++.h>
+#define le 10002
+using namespace std;
+int len, n[le];
+int main(){
+  scanf("%d", &len);
+  for(int i = 0; i < len; scanf("%d", &n[i]), i++);
+  int ct = pow(2, len);
+  for(int i = 0; i < ct; i++){
+    for(int j = 0; j < len; j++){
+      if((i & (1 << j)) > 0) printf("%d ", n[j]);
+    }
+    printf("\n");
+  }
+  return 0;
+}
+------------------------------------------------------------
+LCS && path
+------------------------------------------------------------
+#include <bits/stdc++.h>
+#define le 3003
+using namespace std;
+string a, b, s, ss;
+bool vis[le][le];
+int dis[le][le];
+int fnc(int i, int j){
+  if(i == a.size() || j == b.size()) return 0;
+  if(vis[i][j]) return dis[i][j];
+  int ans = 0;
+  if(a[i] == b[j]) ans = 1 + fnc(i + 1, j + 1);
+  else ans = max(fnc(i + 1, j), fnc(i, j + 1));
+  dis[i][j] = ans;
+  vis[i][j] = true;
+  return dis[i][j];
+}
+void pri(int i, int j){
+  if(i == a.size() || j == b.size()){
+    if(ss == "") ss = s;
+    else if(ss > s) ss = s;
+    return;
+  }
+  if(a[i] == b[j]){
+    s += a[i];
+    pri(i + 1, j + 1);
+    s.erase(s.size() - 1);
+  }
+  else{
+    if(dis[i + 1][j] > dis[i][j + 1]) pri(i + 1, j);
+    else pri(i, j + 1);
+  }
+}
+int main(){
+  //freopen("input.txt", "r", stdin);
+  //freopen("output.txt", "w", stdout);
+  int t, co = 0;
+  for(scanf("%d", &t); t--; ){
+    for(int i = 0; i < le; i++) for(int j = 0; j < le; vis[i][j] = false, dis[i][j] = 0, j++);
+    cin >> a >> b;
+    int x = fnc(0, 0);
+    printf("Case %d: ", ++co);
+    if(x > 0){
+      ss = s = "";
+      pri(0, 0);
+      cout << ss << endl;
+    }
+    else cout << "-1\n";
   }
   return 0;
 }
